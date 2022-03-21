@@ -4,21 +4,23 @@
 template<class ValueType>
 class Set {
 private:
+    static size_t const ONE = 1;
+
     struct Node {
         ValueType value;
-        Node *left;
-        Node *right;
-        Node *parent;
+        Node* left;
+        Node* right;
+        Node* parent;
         size_t level;
 
-        Node() : left(nullptr), right(nullptr), parent(nullptr), level(1) {}
+        Node() : left(nullptr), right(nullptr), parent(nullptr), level(ONE) {}
 
-        Node(const ValueType &value, Node *left, Node *right, Node *parent, size_t level = 1) :
+        Node(const ValueType& value, Node* left, Node* right, Node* parent, size_t level = ONE) :
                 value(value), left(left), right(right), parent(parent), level(level) {}
 
     };
 
-    static Node *DeepCopy(Node *node, Node *pred = nullptr) {
+    static Node* DeepCopy(Node* node, Node* pred = nullptr) {
         if (node == nullptr) {
             return nullptr;
         }
@@ -28,23 +30,23 @@ private:
         return new_node;
     }
 
-    Node *root_;
-    size_t size_;
+    Node* root_ = nullptr;
+    size_t size_ = 0;
 
 public:
     class iterator {
     public:
         iterator() : owner_(nullptr), node_(nullptr) {}
 
-        iterator(const Set *owner, Node *node) : owner_(owner), node_(node) {}
+        iterator(const Set* owner, Node* node) : owner_(owner), node_(node) {}
 
-        iterator &operator=(const iterator &other) {
+        iterator& operator=(const iterator& other) {
             owner_ = other.owner_;
             node_ = other.node_;
             return *this;
         }
 
-        iterator &operator++() {
+        iterator& operator++() {
             if (node_ == nullptr) {
                 return *this;
             }
@@ -65,7 +67,7 @@ public:
             return it;
         }
 
-        iterator &operator--() {
+        iterator& operator--() {
             if (node_ == nullptr) {
                 node_ = owner_->root_;
                 while (node_->right != nullptr) {
@@ -90,26 +92,26 @@ public:
             return it;
         }
 
-        bool operator!=(const iterator &other) const {
+        bool operator!=(const iterator& other) const {
             return node_ != other.node_ || owner_ != other.owner_;
         }
 
-        bool operator==(const iterator &other) const {
+        bool operator==(const iterator& other) const {
             return node_ == other.node_ && owner_ == other.owner_;
         }
 
-        const ValueType &operator*() const {
+        const ValueType& operator*() const {
             return node_->value;
         }
 
-        const ValueType *operator->() const {
+        const ValueType* operator->() const {
             return &(node_->value);
         }
 
 
     private:
-        const Set *owner_;
-        Node *node_;
+        const Set* owner_ = nullptr;
+        Node* node_ = nullptr;
     };
 
     Set() : root_(nullptr), size_(0) {}
@@ -123,20 +125,20 @@ public:
         }
     }
 
-    Set(const std::initializer_list<ValueType> &list) {
+    Set(const std::initializer_list<ValueType>& list) {
         size_ = 0;
         root_ = nullptr;
-        for (auto &x: list) {
+        for (ValueType& x: list) {
             insert(x);
         }
     }
 
-    Set(const Set &other) {
+    Set(const Set& other) {
         root_ = DeepCopy(other.root_);
         size_ = other.size_;
     }
 
-    Set &operator=(const Set &other) {
+    Set& operator=(const Set& other) {
         if (this == &other) {
             return *this;
         }
@@ -158,7 +160,7 @@ public:
         return size_ == 0;
     }
 
-    void insert(const ValueType &value) {
+    void insert(const ValueType& value) {
         bool was_inserted = false;
         root_ = insert(root_, value, was_inserted);
         if (was_inserted) {
@@ -166,7 +168,7 @@ public:
         }
     }
 
-    void erase(const ValueType &value) {
+    void erase(const ValueType& value) {
         bool was_erased = false;
         root_ = erase(root_, value, was_erased);
         if (was_erased) {
@@ -174,20 +176,19 @@ public:
         }
     }
 
-    iterator find(const ValueType &value) const {
+    iterator find(const ValueType& value) const {
         return iterator(this, find(root_, value));
     }
 
-    iterator lower_bound(const ValueType &value) const {
+    iterator lower_bound(const ValueType& value) const {
         return iterator(this, lower_bound(root_, value));
     }
 
-    // TODO: make this O(1) if needed
     iterator begin() const {
         if (root_ == nullptr) {
             return iterator(this, nullptr);
         }
-        auto cur_node = root_;
+        Node* cur_node = root_;
         while (cur_node->left != nullptr) {
             cur_node = cur_node->left;
         }
@@ -205,7 +206,7 @@ private:
         size_ = 0;
     }
 
-    static void Clear(Node *root) {
+    static void Clear(Node* root) {
         if (root != nullptr) {
             Clear(root->left);
             Clear(root->right);
@@ -213,7 +214,7 @@ private:
         }
     }
 
-    static void Update(Node *root) {
+    static void Update(Node* root) {
         if (root == nullptr) {
             return;
         }
@@ -225,7 +226,7 @@ private:
         }
     }
 
-    static Node *Skew(Node *root) {
+    static Node* Skew(Node* root) {
         if (root == nullptr) {
             return nullptr;
         }
@@ -248,7 +249,7 @@ private:
         return root;
     }
 
-    static Node *Split(Node *root) {
+    static Node* Split(Node* root) {
         if (root == nullptr) {
             return nullptr;
         }
@@ -272,7 +273,7 @@ private:
         return root;
     }
 
-    static Node *insert(Node *root, const ValueType &value, bool &was_inserted) {
+    static Node* insert(Node* root, const ValueType& value, bool& was_inserted) {
         if (root == nullptr) {
             was_inserted = true;
             return new Node(value, nullptr, nullptr, nullptr);
@@ -294,7 +295,7 @@ private:
         return root;
     }
 
-    static Node *DecreaseLevel(Node *root) {
+    static Node* DecreaseLevel(Node* root) {
         if (root->left == nullptr || root->right == nullptr) {
             return root;
         }
@@ -308,7 +309,7 @@ private:
         return root;
     }
 
-    static Node *Predicator(Node *root_) {
+    static Node* Predicator(Node* root_) {
         auto cur_node = root_->left;
         while (cur_node->right != nullptr) {
             cur_node = cur_node->right;
@@ -316,7 +317,7 @@ private:
         return cur_node;
     }
 
-    static Node *Successor(Node *root_) {
+    static Node* Successor(Node* root_) {
         auto cur_node = root_->right;
         while (cur_node->left != nullptr) {
             cur_node = cur_node->left;
@@ -324,7 +325,7 @@ private:
         return cur_node;
     }
 
-    static Node *erase(Node *root, const ValueType &value, bool &was_erased) {
+    static Node* erase(Node* root, const ValueType& value, bool& was_erased) {
         if (root == nullptr) {
             return nullptr;
         }
@@ -360,7 +361,6 @@ private:
                 }
             }
         }
-        // TODO: may be some bugs with parent update
         root = DecreaseLevel(root);
         root = Skew(root);
         root->right = Skew(root->right);
@@ -372,7 +372,7 @@ private:
         return root;
     }
 
-    static Node *find(Node *root, const ValueType &value) {
+    static Node* find(Node* root, const ValueType& value) {
         if (root == nullptr) {
             return nullptr;
         }
@@ -384,7 +384,7 @@ private:
         return root;
     }
 
-    static Node *lower_bound(Node *root, const ValueType &value) {
+    static Node* lower_bound(Node* root, const ValueType& value) {
         if (root == nullptr) {
             return nullptr;
         }
