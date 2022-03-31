@@ -8,31 +8,24 @@ private:
 
     struct Node {
         ValueType value;
-        Node* left;
-        Node* right;
-        Node* parent;
-        size_t level;
+        Node* left = nullptr;
+        Node* right = nullptr;
+        Node* parent = nullptr;
+        size_t level = ONE;
 
         // Default constructor.
         Node() : left(nullptr), right(nullptr), parent(nullptr), level(ONE) {}
 
         // Same as copy constructor.
-        Node(const ValueType& value, Node* left, Node* right, Node* parent, size_t level = ONE) :
-                value(value), left(left), right(right), parent(parent), level(level) {}
+        Node(const ValueType& value, Node* left, Node* right, Node* parent,
+             size_t level = ONE) :
+                value(value),
+                left(left),
+                right(right),
+                parent(parent),
+                level(level) {}
 
     };
-
-    // Returns the node that is a full copy of a given node.
-    // Makes node.parent = pred.
-    static Node* DeepCopy(Node* node, Node* pred = nullptr) {
-        if (node == nullptr) {
-            return nullptr;
-        }
-        auto new_node = new Node(node->value, nullptr, nullptr, pred, node->level);
-        new_node->left = DeepCopy(node->left, new_node);
-        new_node->right = DeepCopy(node->right, new_node);
-        return new_node;
-    }
 
     Node* root_ = nullptr;
     size_t size_ = 0;
@@ -236,6 +229,18 @@ public:
     }
 
 private:
+    // Returns the node that is a full copy of a given node.
+    // Makes node.parent = pred.
+    static Node* DeepCopy(Node* node, Node* pred = nullptr) {
+        if (node == nullptr) {
+            return nullptr;
+        }
+        Node* new_node = new Node(node->value, nullptr, nullptr, pred, node->level);
+        new_node->left = DeepCopy(node->left, new_node);
+        new_node->right = DeepCopy(node->right, new_node);
+        return new_node;
+    }
+    
     // Same as destructor.
     // The destructors of the elements are called and the used storage is deallocated.
     void Clear() {
@@ -276,7 +281,7 @@ private:
             return root;
         }
         if (root->left->level == root->level) {
-            auto tmp = root->left;
+            Node* tmp = root->left;
             root->left = tmp->right;
             tmp->right = root;
 
@@ -301,7 +306,7 @@ private:
             return root;
         }
         if (root->level == root->right->right->level) {
-            auto tmp = root->right;
+            Node* tmp = root->right;
             root->right = tmp->left;
             tmp->left = root;
             ++(tmp->level);
@@ -345,7 +350,9 @@ private:
         if (root->left == nullptr || root->right == nullptr) {
             return root;
         }
-        size_t opt_level = (root->left->level > root->right->level ? root->right->level : root->left->level) + 1;
+        size_t opt_level = (root->left->level > root->right->level ? root->right->level
+                                                                   : root->left->level) +
+                           1;
         if (opt_level < root->level) {
             root->level = opt_level;
             if (opt_level < root->right->level) {
@@ -357,7 +364,7 @@ private:
 
     // Returns a node with maximum value less that value in root.
     static Node* Predicator(Node* root_) {
-        auto cur_node = root_->left;
+        Node* cur_node = root_->left;
         while (cur_node->right != nullptr) {
             cur_node = cur_node->right;
         }
@@ -366,7 +373,7 @@ private:
 
     // Returns a node with minimum value more that value in root.
     static Node* Successor(Node* root_) {
-        auto cur_node = root_->right;
+        Node* cur_node = root_->right;
         while (cur_node->left != nullptr) {
             cur_node = cur_node->left;
         }
@@ -395,14 +402,14 @@ private:
                 return nullptr;
             }
             if (root->left == nullptr) {
-                auto tmp = Successor(root);
+                Node* tmp = Successor(root);
                 root->value = tmp->value;
                 root->right = erase(root->right, root->value, was_erased);
                 if (root->right != nullptr) {
                     root->right->parent = root;
                 }
             } else {
-                auto tmp = Predicator(root);
+                Node* tmp = Predicator(root);
                 root->value = tmp->value;
                 root->left = erase(root->left, root->value, was_erased);
                 if (root->left != nullptr) {
@@ -433,14 +440,14 @@ private:
         }
         return root;
     }
-    
+
     // Returns a node with minimum value that not less specified value or nullptr if such node not exist
     static Node* lower_bound(Node* root, const ValueType& value) {
         if (root == nullptr) {
             return nullptr;
         }
         if (value < root->value) {
-            auto it = lower_bound(root->left, value);
+            iterator it = lower_bound(root->left, value);
             if (it == nullptr) {
                 return root;
             }
